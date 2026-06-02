@@ -50,6 +50,7 @@ function extractImage(jsonLd) {
 
 function detectProduct() {
   const jsonLd = getJsonLd();
+  const path = window.location.pathname;
 
   let title = null;
   if (jsonLd && jsonLd.name) {
@@ -60,7 +61,6 @@ function detectProduct() {
 
   const image = extractImage(jsonLd);
 
-  // Broaden price detection for sites with custom selectors
   const priceSelectors = [
     '[itemprop="price"]',
     '.price', '.product-price', '.product__price',
@@ -82,36 +82,50 @@ function detectProduct() {
     domPrice ||
     null;
 
-  const path = window.location.pathname;
+  // Homepage
+  const isHomepage = /^\/?$/.test(path);
 
-  // Definitively a listing/home path — never a single product
-  const isListingPath = /^\/?$/.test(path) ||
-    /^\/?(shop|store|collections?|categories|category|search|listing|brands?|sale|new-in|new-arrivals?|featured|home)\/?$/i.test(path) ||
-    /\/(shop|store|collections?|categories|category|search|listing|brands?)(\/|$|\?)/i.test(path) ||
-    /\/products\/[^/?#]+\//i.test(path); // /products/all/new-arrivals/ style collection URLs
+  // Known listing/category URL patterns
+  const isListingUrl =
+    /\/(collections?|categories|category|shop|store|search|listing|brands?|sale|new-in|new-arrivals?|featured|home)(\/|$|\?)/i.test(path) ||
+    /\/products\/[^/?#]+\/[^/?#]/i.test(path); // /products/all/subcategory (multi-segment)
 
-  // URL pattern pointing at a single product slug
-  const isProductUrl = /\/(product|item|p)\/[^/]+/i.test(path) ||
-    /\/products\/[^/?#]+$/i.test(path);
+  const isListingPath = isHomepage || isListingUrl;
 
-  // Multiple product cards = listing grid, not a single product
+  // URL patterns that reliably point to a single product
+  const isProductUrl =
+    /\/products\/[^/?#]+(\/)?$/i.test(path) ||          // Shopify: /products/slug or /products/slug/
+    /\/(product|item|p)\/[^/?#]/i.test(path) ||          // /product/slug, /item/slug, /p/slug (Cettire)
+    /\/dp\/[A-Z0-9]/i.test(path) ||                      // Amazon: /dp/ASIN
+    /\/[^/]+-\d{5,}\.(html?|aspx)$/i.test(path) ||       // Farfetch: item-name-12345.aspx
+    /\/(pdp|product-detail|product_detail)\//i.test(path); // PDP paths
+
+  // More than 3 product cards = a grid/listing
   const productCardCount = document.querySelectorAll(
     '[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"]'
   ).length;
   const isGrid = productCardCount > 3;
 
-  const isProductPage = !isListingPath && !isGrid && !!(
-    isProductUrl ||
-    (!isGrid && getMeta('og:type') === 'product') ||
-    document.querySelector('[itemtype*="Product"]') ||
-    getMeta('og:price:amount') ||
-    getMeta('product:price:amount') ||
-    (jsonLd && isProductUrl) ||
-    (!isGrid && document.querySelector('[itemprop="price"]') && !document.querySelector('[class*="product-card"], [class*="ProductCard"]')) ||
-    (!isGrid && domPrice && document.querySelector('[class*="product-detail"], [class*="ProductDetail"], [class*="product__title"]'))
+  // Add-to-cart button is a strong single-product signal
+  const hasAddToCart = !!document.querySelector(
+    'button[name="add"], [class*="add-to-cart"], [class*="AddToCart"], [class*="add_to_cart"], [id*="add-to-cart"], [id*="AddToCart"], [data-action*="add-to-cart"]'
   );
 
-  // Detect if we're on a store/shop site even if not a product page
+  // Structured data / meta signals
+  const hasStrongMeta = !!(
+    jsonLd ||
+    getMeta('og:type') === 'product' ||
+    document.querySelector('[itemtype*="schema.org/Product"]') ||
+    getMeta('og:price:amount') ||
+    getMeta('product:price:amount')
+  );
+
+  const isProductPage = !isListingPath && !isGrid && !!(
+    hasStrongMeta ||
+    isProductUrl ||
+    hasAddToCart
+  );
+
   const isStorePage = !isProductPage && !!(
     isListingPath ||
     isGrid ||
