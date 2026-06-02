@@ -1,5 +1,4 @@
 // content script — runs on every page
-// Extracts product info and responds to popup requests
 
 function getJsonLd() {
   const scripts = document.querySelectorAll('script[type="application/ld+json"]');
@@ -48,24 +47,31 @@ function extractImage(jsonLd) {
   return null;
 }
 
+function countVisiblePrices() {
+  const els = document.querySelectorAll(
+    '[itemprop="price"], [class*="price"]:not(script):not(style), [class*="Price"]:not(script):not(style), [data-price], [data-product-price]'
+  );
+  let count = 0;
+  for (const el of els) {
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) count++;
+    if (count > 3) break; // short-circuit
+  }
+  return count;
+}
+
 function detectProduct() {
   const jsonLd = getJsonLd();
   const path = window.location.pathname;
+  const search = window.location.search;
 
-  let title = null;
-  if (jsonLd && jsonLd.name) {
-    title = jsonLd.name;
-  } else {
-    title = getMeta('og:title') || document.querySelector('h1')?.textContent?.trim() || document.title;
-  }
-
+  // --- Extract metadata ---
+  let title = jsonLd?.name || getMeta('og:title') || document.querySelector('h1')?.textContent?.trim() || document.title;
   const image = extractImage(jsonLd);
 
   const priceSelectors = [
-    '[itemprop="price"]',
-    '.price', '.product-price', '.product__price',
-    '[class*="price"]', '[class*="Price"]',
-    '[data-price]', '[data-product-price]',
+    '[itemprop="price"]', '.price', '.product-price', '.product__price',
+    '[class*="price"]', '[class*="Price"]', '[data-price]', '[data-product-price]',
   ];
   let domPrice = null;
   for (const sel of priceSelectors) {
@@ -75,79 +81,53 @@ function detectProduct() {
       if (domPrice) break;
     }
   }
+  const finalPrice = extractPrice(jsonLd) || getMeta('og:price:amount') || getMeta('product:price:amount') || domPrice || null;
 
-  const finalPrice = extractPrice(jsonLd) ||
-    getMeta('og:price:amount') ||
-    getMeta('product:price:amount') ||
-    domPrice ||
-    null;
-
-  // Homepage
+  // ── RULE 2: Listing page signals (these beat Rule 1) ──────────────────────
   const isHomepage = /^\/?$/.test(path);
 
-  // Known listing/category URL patterns
-  const isListingUrl =
-    /\/(collections?|categories|category|shop|store|search|listing|brands?|sale|new-in|new-arrivals?|featured|home)(\/|$|\?)/i.test(path) ||
-    /\/products\/[^/?#]+\/[^/?#]/i.test(path); // /products/all/subcategory (multi-segment)
+  const hasListingPath = /\/(collections?|categories|category|designers?|brands?|shop|store|search|listing|sale|new-in|new-arrivals?|featured|home)(\/|$|\?)/i.test(path);
 
-  const isListingPath = isHomepage || isListingUrl;
+  const hasListingQuery = /[?&](saleStatus|sortBy|sort_by|sort|filter|page|category|gender|size|color|brand|material)=/i.test(search);
 
-  // URL patterns that reliably point to a single product
-  const isProductUrl =
-    /\/products\/[^/?#]+(\/)?$/i.test(path) ||          // Shopify: /products/slug or /products/slug/
-    /\/(product|item|p)\/[^/?#]/i.test(path) ||          // /product/slug, /item/slug, /p/slug (Cettire)
-    /\/dp\/[A-Z0-9]/i.test(path) ||                      // Amazon: /dp/ASIN
-    /\/[^/]+-\d{5,}\.(html?|aspx)$/i.test(path) ||       // Farfetch: item-name-12345.aspx
-    /\/(pdp|product-detail|product_detail)\//i.test(path); // PDP paths
+  const hasMultiplePrices = countVisiblePrices() > 3;
 
-  // Count visible price elements — more than 2 means it's a listing grid
-  const priceEls = document.querySelectorAll(
-    '[itemprop="price"], [class*="price"]:not(script), [class*="Price"]:not(script), [data-price], [data-product-price]'
-  );
-  const visiblePriceCount = [...priceEls].filter(el => {
-    const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
-  }).length;
-  const isGrid = visiblePriceCount > 2;
+  // Multi-segment /products/category/sub paths (not a single product slug)
+  const isCollectionPath = /\/products\/[^/?#]+\/[^/?#]/i.test(path);
 
-  // Add-to-cart button is a strong single-product signal
+  const isListingPage = isHomepage || hasListingPath || hasListingQuery || hasMultiplePrices || isCollectionPath;
+
+  // ── RULE 1: Single product signals ───────────────────────────────────────
+  const hasStrongMeta =
+    getMeta('og:type') === 'product' ||
+    !!document.querySelector('[itemtype*="schema.org/Product"]') ||
+    !!getMeta('og:price:amount') ||
+    !!getMeta('product:price:amount') ||
+    !!jsonLd;
+
+  const hasProductUrl =
+    /\/products\/[^/?#]+(\/)?$/i.test(path) ||   // Shopify
+    /\/(product|item|p)\/[^/?#]/i.test(path) ||   // /product/slug, /p/slug (Cettire)
+    /\/dp\/[A-Z0-9]/i.test(path) ||               // Amazon
+    /\/[^/]+-\d{5,}\.(html?|aspx)$/i.test(path) || // Farfetch
+    /\/(pdp|product-detail|product_detail)\//i.test(path);
+
   const hasAddToCart = !!document.querySelector(
     'button[name="add"], [class*="add-to-cart"], [class*="AddToCart"], [class*="add_to_cart"], [id*="add-to-cart"], [id*="AddToCart"], [data-action*="add-to-cart"]'
   );
 
-  // Structured data / meta signals
-  const hasStrongMeta = !!(
-    jsonLd ||
-    getMeta('og:type') === 'product' ||
-    document.querySelector('[itemtype*="schema.org/Product"]') ||
-    getMeta('og:price:amount') ||
-    getMeta('product:price:amount')
-  );
+  // Rule 2 overrides Rule 1
+  const isProductPage = !isListingPage && (hasStrongMeta || hasProductUrl || hasAddToCart);
 
-  const isProductPage = !isListingPath && !isGrid && !!(
-    hasStrongMeta ||
-    isProductUrl ||
-    hasAddToCart
-  );
-
-  // Query string signals for listing pages (e.g. ?saleStatus=, ?sortBy=, ?filter=, ?page=)
-  const search = window.location.search;
-  const isListingQuery = /[?&](saleStatus|sortBy|sort|filter|page|category|gender|size|color|brand)=/i.test(search);
-
-  const isStorePage = !isProductPage && !!(
-    isListingPath ||
-    isGrid ||
-    isListingQuery ||
-    /\/(shop|store|collections?|category|designers?|search|listing|products)\b/i.test(path)
-  );
+  // ── RULE 3: Everything else = empty state (handled in popup.js) ──────────
+  const isStorePage = !isProductPage && isListingPage;
 
   return { title, price: finalPrice, image, isProductPage, isStorePage, url: window.location.href };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'GET_PRODUCT_DATA') {
-    const data = detectProduct();
-    sendResponse(data);
+    sendResponse(detectProduct());
   }
   return true;
 });
