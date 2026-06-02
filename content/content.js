@@ -82,23 +82,39 @@ function detectProduct() {
     domPrice ||
     null;
 
-  // Broader product page detection
-  const isProductPage = !!(jsonLd ||
+  const path = window.location.pathname;
+
+  // Pages that are definitively NOT individual product pages
+  const isListingPath = /^\/?(shop|store|collections?|categories|category|search|listing|products|brands?|sale|new-in|new-arrivals?|featured|home)?(\/)?$/i.test(path) ||
+    /\/(shop|store|collections?|categories|category|search|listing|brands?)(\?|$|\/[^/]+$)/i.test(path);
+
+  // Strong signals: this is definitely a single product
+  const strongProductSignal = !!(
+    jsonLd ||
     getMeta('og:type') === 'product' ||
     document.querySelector('[itemtype*="Product"]') ||
-    document.querySelector('[itemprop="price"]') ||
     getMeta('og:price:amount') ||
     getMeta('product:price:amount') ||
+    /\/(product|item|p)\/[^/]+/i.test(path) ||
+    /\/products\/[^/]+/i.test(path)
+  );
+
+  // Weak signals only count when we're not on a clear listing/homepage
+  const weakProductSignal = !isListingPath && !!(
+    document.querySelector('[itemprop="price"]') ||
     domPrice ||
-    /\/(product|item|p)\//i.test(window.location.pathname) ||
-    document.querySelector('[class*="product"][class*="price"], [class*="ProductPrice"], [class*="product-detail"]'));
+    document.querySelector('[class*="ProductPrice"], [class*="product-detail"], [class*="product__title"]')
+  );
+
+  const isProductPage = strongProductSignal || weakProductSignal;
 
   // Detect if we're on a store/shop site even if not a product page
-  const isStorePage = !!(
+  const isStorePage = !isProductPage && !!(
     getMeta('og:site_name') ||
     document.querySelector('[itemtype*="Store"], [itemtype*="Organization"]') ||
-    /\/(shop|store|collection|category|search|listing|products)\b/i.test(window.location.pathname) ||
-    document.querySelector('[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"]')
+    /\/(shop|store|collection|category|search|listing|products)\b/i.test(path) ||
+    document.querySelector('[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"]') ||
+    isListingPath
   );
 
   return { title, price: finalPrice, image, isProductPage, isStorePage, url: window.location.href };
