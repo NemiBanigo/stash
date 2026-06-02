@@ -83,24 +83,12 @@ function detectProduct() {
   }
   const finalPrice = extractPrice(jsonLd) || getMeta('og:price:amount') || getMeta('product:price:amount') || domPrice || null;
 
-  // ── RULE 2: Listing page signals (these beat Rule 1) ──────────────────────
-  const isHomepage = /^\/?$/.test(path);
-
-  const hasListingPath = /\/(collections?|categories|category|designers?|brands?|shop|store|search|listing|sale|new-in|new-arrivals?|featured|home)(\/|$|\?)/i.test(path);
-
-  const hasListingQuery = /[?&](saleStatus|sortBy|sort_by|sort|filter|page|category|gender|size|color|brand|material)=/i.test(search);
-
+  // ── RULE 2: Not a product URL = listing/store page ────────────────────────
+  // Single product pages always have a unique identifier in the URL.
+  // Anything without a product URL pattern is a listing or non-commerce page.
   const hasMultiplePrices = countVisiblePrices() > 3;
 
-  // Multi-segment /products/category/sub paths (not a single product slug)
-  const isCollectionPath = /\/products\/[^/?#]+\/[^/?#]/i.test(path);
-
-  // Multi-segment paths that don't look like a product are likely category pages
-  // e.g. /nl/en/women/shoes, /en/us/clothing/tops
-  const pathSegments = path.replace(/^\/|\/$/g, '').split('/').filter(Boolean);
-  const isDeepCategoryPath = pathSegments.length >= 2 && !hasProductUrl;
-
-  const isListingPage = isHomepage || hasListingPath || hasListingQuery || hasMultiplePrices || isCollectionPath || isDeepCategoryPath;
+  const isListingPage = !hasProductUrl || hasMultiplePrices;
 
   // ── RULE 1: Single product signals ───────────────────────────────────────
   const hasStrongMeta =
@@ -124,8 +112,13 @@ function detectProduct() {
   // Rule 2 overrides Rule 1
   const isProductPage = !isListingPage && (hasStrongMeta || hasProductUrl || hasAddToCart);
 
-  // ── RULE 3: Everything else = empty state (handled in popup.js) ──────────
-  const isStorePage = !isProductPage && isListingPage;
+  // ── RULE 3: Store vs empty ────────────────────────────────────────────────
+  // Store = listing page that has at least one price or product signal on it
+  const hasAnyPrice = countVisiblePrices() > 0;
+  const hasAddToCartAnywhere = !!document.querySelector(
+    'button[name="add"], [class*="add-to-cart"], [class*="AddToCart"], [class*="add_to_cart"], [id*="add-to-cart"], [id*="AddToCart"]'
+  );
+  const isStorePage = !isProductPage && isListingPage && (hasAnyPrice || hasAddToCartAnywhere || hasStrongMeta);
 
   return { title, price: finalPrice, image, isProductPage, isStorePage, url: window.location.href };
 }
