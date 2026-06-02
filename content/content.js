@@ -102,7 +102,7 @@ function detectProduct() {
 
   // More than 3 product cards = a grid/listing
   const productCardCount = document.querySelectorAll(
-    '[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"]'
+    '[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"], [class*="product-tile"], [class*="ProductTile"], [class*="ProductGrid"] li, [class*="product-grid"] li'
   ).length;
   const isGrid = productCardCount > 3;
 
@@ -126,10 +126,15 @@ function detectProduct() {
     hasAddToCart
   );
 
+  // Query string signals for listing pages (e.g. ?saleStatus=, ?sortBy=, ?filter=, ?page=)
+  const search = window.location.search;
+  const isListingQuery = /[?&](saleStatus|sortBy|sort|filter|page|category|gender|size|color|brand)=/i.test(search);
+
   const isStorePage = !isProductPage && !!(
     isListingPath ||
     isGrid ||
-    /\/(shop|store|collections?|category|search|listing|products)\b/i.test(path)
+    isListingQuery ||
+    /\/(shop|store|collections?|category|designers?|search|listing|products)\b/i.test(path)
   );
 
   return { title, price: finalPrice, image, isProductPage, isStorePage, url: window.location.href };
