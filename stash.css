@@ -47,7 +47,8 @@ body {
   left: 0;
   right: 0;
   z-index: 10;
-  background: transparent;
+  background: #f7f7f7;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .header-inner {
