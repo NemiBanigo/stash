@@ -58,24 +58,42 @@ function detectProduct() {
     title = getMeta('og:title') || document.querySelector('h1')?.textContent?.trim() || document.title;
   }
 
-  const price = extractPrice(jsonLd) ||
-    getMeta('og:price:amount') ||
-    getMeta('product:price:amount') ||
-    document.querySelector('[itemprop="price"]')?.getAttribute('content') ||
-    document.querySelector('[itemprop="price"]')?.textContent?.trim() ||
-    document.querySelector('.price, .product-price')?.textContent?.trim() ||
-    null;
-
   const image = extractImage(jsonLd);
 
+  // Broaden price detection for sites with custom selectors
+  const priceSelectors = [
+    '[itemprop="price"]',
+    '.price', '.product-price', '.product__price',
+    '[class*="price"]', '[class*="Price"]',
+    '[data-price]', '[data-product-price]',
+  ];
+  let domPrice = null;
+  for (const sel of priceSelectors) {
+    const el = document.querySelector(sel);
+    if (el) {
+      domPrice = el.getAttribute('content') || el.getAttribute('data-price') || el.textContent?.trim();
+      if (domPrice) break;
+    }
+  }
+
+  const finalPrice = extractPrice(jsonLd) ||
+    getMeta('og:price:amount') ||
+    getMeta('product:price:amount') ||
+    domPrice ||
+    null;
+
+  // Broader product page detection
   const isProductPage = !!(jsonLd ||
     getMeta('og:type') === 'product' ||
     document.querySelector('[itemtype*="Product"]') ||
     document.querySelector('[itemprop="price"]') ||
     getMeta('og:price:amount') ||
-    getMeta('product:price:amount'));
+    getMeta('product:price:amount') ||
+    domPrice ||
+    /\/(product|item|p)\//i.test(window.location.pathname) ||
+    document.querySelector('[class*="product"][class*="price"], [class*="ProductPrice"], [class*="product-detail"]'));
 
-  return { title, price, image, isProductPage, url: window.location.href };
+  return { title, price: finalPrice, image, isProductPage, url: window.location.href };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
