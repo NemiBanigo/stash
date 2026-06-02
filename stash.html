@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stash — Saved Items</title>
+  <link rel="stylesheet" href="stash.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <div class="header-inner">
+        <div class="logo-row">
+          <div class="logo">S</div>
+          <span class="brand">Stash</span>
+        </div>
+        <div class="header-actions">
+          <input class="search-input" id="searchInput" type="text" placeholder="Search saved items…" />
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="toolbar">
+        <span class="item-count" id="itemCount">0 items</span>
+        <select class="filter-select" id="collectionFilter">
+          <option value="">All collections</option>
+        </select>
+      </div>
+
+      <div class="grid" id="grid"></div>
+
+      <div class="empty-page hidden" id="emptyPage">
+        <svg width="72" height="72" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="20" width="60" height="48" rx="6" fill="#f0f0f0" stroke="#ddd" stroke-width="2"/>
+          <rect x="22" y="10" width="36" height="16" rx="4" fill="#e0e0e0" stroke="#ddd" stroke-width="2"/>
+          <circle cx="32" cy="44" r="6" fill="#ccc"/>
+          <circle cx="48" cy="44" r="6" fill="#ccc"/>
+          <path d="M30 58 Q40 52 50 58" stroke="#bbb" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+        <p class="empty-heading">Your stash is empty</p>
+        <p class="empty-sub">Browse online stores and save products with the Stash extension.</p>
+      </div>
+    </main>
+  </div>
+  <script src="stash.js"></script>
+</body>
+</html>
