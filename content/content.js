@@ -87,7 +87,8 @@ function detectProduct() {
   // Definitively a listing/home path — never a single product
   const isListingPath = /^\/?$/.test(path) ||
     /^\/?(shop|store|collections?|categories|category|search|listing|brands?|sale|new-in|new-arrivals?|featured|home)\/?$/i.test(path) ||
-    /\/(shop|store|collections?|categories|category|search|listing|brands?)(\/|$|\?)/i.test(path);
+    /\/(shop|store|collections?|categories|category|search|listing|brands?)(\/|$|\?)/i.test(path) ||
+    /\/products\/[^/?#]+\//i.test(path); // /products/all/new-arrivals/ style collection URLs
 
   // URL pattern pointing at a single product slug
   const isProductUrl = /\/(product|item|p)\/[^/]+/i.test(path) ||
