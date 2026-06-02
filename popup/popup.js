@@ -49,8 +49,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     productData = await chrome.tabs.sendMessage(tab.id, { type: 'GET_PRODUCT_DATA' });
   } catch (e) {
-    // Content script not available (e.g. chrome:// pages)
-    productData = { isProductPage: false };
+    // Content script not injected yet — inject it programmatically and retry
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content/content.js']
+      });
+      productData = await chrome.tabs.sendMessage(tab.id, { type: 'GET_PRODUCT_DATA' });
+    } catch (e2) {
+      productData = { isProductPage: false };
+    }
   }
 
   // Check if URL is already saved
