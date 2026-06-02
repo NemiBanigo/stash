@@ -226,6 +226,8 @@ body {
 .new-collection-input {
   margin-top: 6px;
   cursor: text;
+  appearance: auto;
+  background-image: none;
 }
 
 /* Toggle */

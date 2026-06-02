@@ -47,43 +47,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   function wireNewCollection(select, newInput) {
     select.addEventListener('change', () => {
       if (select.value === '__new__') {
+        newInput.value = '';
         select.classList.add('hidden');
         newInput.classList.remove('hidden');
         newInput.focus();
       }
     });
-    newInput.addEventListener('keydown', async (e) => {
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        const name = newInput.value.trim();
-        if (name) {
-          await populateSelect(select, name);
-          select.value = name;
-        } else {
-          await populateSelect(select, 'General');
-        }
-        newInput.classList.add('hidden');
-        select.classList.remove('hidden');
-      }
-      if (e.key === 'Escape') {
-        newInput.classList.add('hidden');
-        select.classList.remove('hidden');
-        await populateSelect(select, select.dataset.prev || 'General');
-      }
-    });
-    newInput.addEventListener('blur', async () => {
-      const name = newInput.value.trim();
-      if (name) {
-        await populateSelect(select, name);
-        select.value = name;
-      } else {
-        await populateSelect(select, 'General');
-      }
+
+    async function confirmNewCollection() {
+      const name = newInput.value.trim() || 'General';
+      await populateSelect(select, name);
       newInput.classList.add('hidden');
       select.classList.remove('hidden');
+    }
+
+    newInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); confirmNewCollection(); }
+      if (e.key === 'Escape') { newInput.value = ''; confirmNewCollection(); }
     });
-    select.addEventListener('focus', () => {
-      if (select.value !== '__new__') select.dataset.prev = select.value;
-    });
+    newInput.addEventListener('blur', confirmNewCollection);
   }
 
   await populateSelect(savedCollection, 'General');
