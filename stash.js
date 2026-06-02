@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const priceHtml = item.price ? `<div class="card-price">${escHtml(item.price)}</div>` : '';
     const notifyHtml = item.notifyOnPriceDrop ? `<span class="card-notify">● Watching</span>` : '';
     const collectionHtml = item.collection ? `<div class="card-collection">${escHtml(item.collection)}</div>` : '';
+    const noteHtml = item.note ? `<div class="card-note">${escHtml(item.note)}</div>` : '';
 
     card.innerHTML = `
       ${imageHtml}
@@ -84,6 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="card-domain">${escHtml(item.domain || '')}</div>
         ${priceHtml}
         ${collectionHtml}
+        ${noteHtml}
         <div class="card-meta">
           <span class="card-date">${date}</span>
           ${notifyHtml}

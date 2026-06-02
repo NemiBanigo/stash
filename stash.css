@@ -234,6 +234,17 @@ body {
   font-weight: 500;
 }
 
+.card-note {
+  font-size: 11px;
+  color: #888;
+  font-style: italic;
+  margin-top: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .card-collection {
   font-size: 11px;
   color: #888;
