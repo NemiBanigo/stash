@@ -17,6 +17,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentItem = null;
   let currentTab = null;
 
+  // Load existing collections from all saved items and populate datalist
+  async function loadCollections() {
+    const all = await chrome.storage.local.get(null);
+    const names = new Set();
+    for (const val of Object.values(all)) {
+      if (val && typeof val === 'object' && val.collection) names.add(val.collection);
+    }
+    const datalist = document.getElementById('collections-list');
+    datalist.innerHTML = '';
+    for (const name of [...names].sort()) {
+      const opt = document.createElement('option');
+      opt.value = name;
+      datalist.appendChild(opt);
+    }
+  }
+
+  await loadCollections();
+
   // Get active tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTab = tab;
@@ -87,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       price: productData.price || null,
       domain: productData.domain || new URL(tab.url).hostname,
       savedAt: new Date().toISOString(),
-      collection: productCollection.value,
+      collection: productCollection.value.trim(),
       notifyOnPriceDrop: productNotifyToggle.checked,
       note: ''
     };
@@ -142,9 +160,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ---- Collection: auto-save on change ----
   savedCollection.addEventListener('change', async () => {
     if (currentItem) {
-      const updated = { ...currentItem, collection: savedCollection.value };
+      const updated = { ...currentItem, collection: savedCollection.value.trim() };
       await chrome.storage.local.set({ [updated.id]: updated });
       currentItem = updated;
+      await loadCollections();
     }
   });
 
@@ -180,6 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     savedCollection.value = item.collection || '';
+    await loadCollections();
     notifyToggle.checked = !!item.notifyOnPriceDrop;
     updateWatchingFrom(item);
 
