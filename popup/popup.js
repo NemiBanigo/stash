@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById(id).classList.remove('hidden');
   }
 
-  function showSavedState(item) {
+  async function showSavedState(item) {
     showState('stateSaved');
     document.getElementById('app').classList.remove('show-manual');
 
