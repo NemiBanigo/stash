@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load existing collections from all saved items and populate datalist
   async function loadCollections() {
     const all = await chrome.storage.local.get(null);
-    const names = new Set();
+    const names = new Set(['General']);
     for (const val of Object.values(all)) {
       if (val && typeof val === 'object' && val.collection) names.add(val.collection);
     }
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       price: productData.price || null,
       domain: productData.domain || new URL(tab.url).hostname,
       savedAt: new Date().toISOString(),
-      collection: productCollection.value.trim(),
+      collection: productCollection.value.trim() || 'General',
       notifyOnPriceDrop: productNotifyToggle.checked,
       note: ''
     };
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       thumb.style.display = 'none';
     }
 
-    savedCollection.value = item.collection || '';
+    savedCollection.value = item.collection || 'General';
     await loadCollections();
     notifyToggle.checked = !!item.notifyOnPriceDrop;
     updateWatchingFrom(item);
@@ -224,6 +224,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       thumb.src = '';
       thumb.style.display = 'none';
     }
+
+    productCollection.value = productCollection.value || 'General';
   }
 
   function showEmptyState() {
