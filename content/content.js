@@ -98,7 +98,7 @@ function detectProduct() {
   const productCardCount = document.querySelectorAll(
     '[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"]'
   ).length;
-  const isGrid = productCardCount > 2;
+  const isGrid = productCardCount > 3;
 
   const isProductPage = !isListingPath && !isGrid && !!(
     isProductUrl ||
@@ -115,8 +115,7 @@ function detectProduct() {
   const isStorePage = !isProductPage && !!(
     isListingPath ||
     isGrid ||
-    /\/(shop|store|collections?|category|search|listing|products)\b/i.test(path) ||
-    document.querySelector('[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"]')
+    /\/(shop|store|collections?|category|search|listing|products)\b/i.test(path)
   );
 
   return { title, price: finalPrice, image, isProductPage, isStorePage, url: window.location.href };
