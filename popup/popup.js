@@ -123,9 +123,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentItem = stored[urlKey] || null;
 
   if (currentItem) {
-    showSavedState(currentItem);
+    await showSavedState(currentItem);
   } else if (productData && productData.isProductPage) {
-    showProductState(productData);
+    await showProductState(productData);
   } else if (productData && productData.isStorePage) {
     showStoreState();
   } else {
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     await chrome.storage.local.set({ [item.id]: item });
     currentItem = item;
-    showSavedState(item);
+    await showSavedState(item);
   });
 
   // ---- Done button ----
