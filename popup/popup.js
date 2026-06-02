@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       productData = await chrome.tabs.sendMessage(tab.id, { type: 'GET_PRODUCT_DATA' });
     } catch (e2) {
-      productData = { isProductPage: false };
+      productData = { isProductPage: false, isStorePage: false };
     }
   }
 
@@ -66,11 +66,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const stored = await chrome.storage.local.get(urlKey);
   currentItem = stored[urlKey] || null;
 
+  // Treat any normal http/https URL as a store if detection was inconclusive
+  const isWebPage = tab.url && (tab.url.startsWith('http://') || tab.url.startsWith('https://'));
+
   if (currentItem) {
     showSavedState(currentItem);
   } else if (productData && productData.isProductPage) {
     showProductState(productData);
   } else if (productData && productData.isStorePage) {
+    showStoreState();
+  } else if (isWebPage) {
     showStoreState();
   } else {
     showEmptyState();
