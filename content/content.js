@@ -100,11 +100,15 @@ function detectProduct() {
     /\/[^/]+-\d{5,}\.(html?|aspx)$/i.test(path) ||       // Farfetch: item-name-12345.aspx
     /\/(pdp|product-detail|product_detail)\//i.test(path); // PDP paths
 
-  // More than 3 product cards = a grid/listing
-  const productCardCount = document.querySelectorAll(
-    '[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"], [class*="product-tile"], [class*="ProductTile"], [class*="ProductGrid"] li, [class*="product-grid"] li'
-  ).length;
-  const isGrid = productCardCount > 3;
+  // Count visible price elements — more than 2 means it's a listing grid
+  const priceEls = document.querySelectorAll(
+    '[itemprop="price"], [class*="price"]:not(script), [class*="Price"]:not(script), [data-price], [data-product-price]'
+  );
+  const visiblePriceCount = [...priceEls].filter(el => {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }).length;
+  const isGrid = visiblePriceCount > 2;
 
   // Add-to-cart button is a strong single-product signal
   const hasAddToCart = !!document.querySelector(
