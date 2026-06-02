@@ -122,11 +122,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const stored = await chrome.storage.local.get(urlKey);
   currentItem = stored[urlKey] || null;
 
+  const isWebPage = tab.url && (tab.url.startsWith('http://') || tab.url.startsWith('https://'));
+
   if (currentItem) {
     await showSavedState(currentItem);
   } else if (productData && productData.isProductPage) {
     await showProductState(productData);
   } else if (productData && productData.isStorePage) {
+    showStoreState();
+  } else if (isWebPage) {
+    // Any http/https page that isn't a detected product defaults to store state
     showStoreState();
   } else {
     showEmptyState();

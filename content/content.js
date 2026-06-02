@@ -112,13 +112,8 @@ function detectProduct() {
   // Rule 2 overrides Rule 1
   const isProductPage = !isListingPage && (hasStrongMeta || hasProductUrl || hasAddToCart);
 
-  // ── RULE 3: Store vs empty ────────────────────────────────────────────────
-  // Store = listing page that has at least one price or product signal on it
-  const hasAnyPrice = countVisiblePrices() > 0;
-  const hasAddToCartAnywhere = !!document.querySelector(
-    'button[name="add"], [class*="add-to-cart"], [class*="AddToCart"], [class*="add_to_cart"], [id*="add-to-cart"], [id*="AddToCart"]'
-  );
-  const isStorePage = !isProductPage && isListingPage && (hasAnyPrice || hasAddToCartAnywhere || hasStrongMeta);
+  // ── RULE 3: Store state = any non-product page on the web ────────────────
+  const isStorePage = !isProductPage && isListingPage;
 
   return { title, price: finalPrice, image, isProductPage, isStorePage, url: window.location.href };
 }
