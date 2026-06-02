@@ -70,6 +70,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     showSavedState(currentItem);
   } else if (productData && productData.isProductPage) {
     showProductState(productData);
+  } else if (productData && productData.isStorePage) {
+    showStoreState();
   } else {
     showEmptyState();
   }
@@ -154,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function showState(id) {
-    ['stateLoading', 'stateSaved', 'stateEmpty', 'stateProduct'].forEach(s => {
+    ['stateLoading', 'stateSaved', 'stateEmpty', 'stateProduct', 'stateStore'].forEach(s => {
       document.getElementById(s).classList.add('hidden');
     });
     document.getElementById(id).classList.remove('hidden');
@@ -208,6 +210,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   function showEmptyState() {
     showState('stateEmpty');
     document.getElementById('app').classList.add('show-manual');
+  }
+
+  function showStoreState() {
+    showState('stateStore');
+    document.getElementById('app').classList.remove('show-manual');
   }
 
   function updateWatchingFrom(item) {

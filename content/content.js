@@ -93,7 +93,15 @@ function detectProduct() {
     /\/(product|item|p)\//i.test(window.location.pathname) ||
     document.querySelector('[class*="product"][class*="price"], [class*="ProductPrice"], [class*="product-detail"]'));
 
-  return { title, price: finalPrice, image, isProductPage, url: window.location.href };
+  // Detect if we're on a store/shop site even if not a product page
+  const isStorePage = !!(
+    getMeta('og:site_name') ||
+    document.querySelector('[itemtype*="Store"], [itemtype*="Organization"]') ||
+    /\/(shop|store|collection|category|search|listing|products)\b/i.test(window.location.pathname) ||
+    document.querySelector('[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"]')
+  );
+
+  return { title, price: finalPrice, image, isProductPage, isStorePage, url: window.location.href };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
