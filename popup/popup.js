@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notifyToggle = document.getElementById('notifyToggle');
   const productNotifyToggle = document.getElementById('productNotifyToggle');
   const savedCollection = document.getElementById('savedCollection');
+  const savedCollectionNew = document.getElementById('savedCollectionNew');
   const productCollection = document.getElementById('productCollection');
+  const productCollectionNew = document.getElementById('productCollectionNew');
   const noteArea = document.getElementById('noteArea');
   const noteInput = document.getElementById('noteInput');
   const watchingFrom = document.getElementById('watchingFrom');
@@ -17,23 +19,77 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentItem = null;
   let currentTab = null;
 
-  // Load existing collections from all saved items and populate datalist
-  async function loadCollections() {
+  async function getCollectionNames() {
     const all = await chrome.storage.local.get(null);
     const names = new Set(['General']);
     for (const val of Object.values(all)) {
       if (val && typeof val === 'object' && val.collection) names.add(val.collection);
     }
-    const datalist = document.getElementById('collections-list');
-    datalist.innerHTML = '';
-    for (const name of [...names].sort()) {
-      const opt = document.createElement('option');
-      opt.value = name;
-      datalist.appendChild(opt);
-    }
+    return [...names].sort();
   }
 
-  await loadCollections();
+  async function populateSelect(select, currentValue) {
+    const names = await getCollectionNames();
+    select.innerHTML = '';
+    for (const name of names) {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    }
+    const newOpt = document.createElement('option');
+    newOpt.value = '__new__';
+    newOpt.textContent = '＋ New collection';
+    select.appendChild(newOpt);
+    select.value = names.includes(currentValue) ? currentValue : 'General';
+  }
+
+  function wireNewCollection(select, newInput) {
+    select.addEventListener('change', () => {
+      if (select.value === '__new__') {
+        select.classList.add('hidden');
+        newInput.classList.remove('hidden');
+        newInput.focus();
+      }
+    });
+    newInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        const name = newInput.value.trim();
+        if (name) {
+          await populateSelect(select, name);
+          select.value = name;
+        } else {
+          await populateSelect(select, 'General');
+        }
+        newInput.classList.add('hidden');
+        select.classList.remove('hidden');
+      }
+      if (e.key === 'Escape') {
+        newInput.classList.add('hidden');
+        select.classList.remove('hidden');
+        await populateSelect(select, select.dataset.prev || 'General');
+      }
+    });
+    newInput.addEventListener('blur', async () => {
+      const name = newInput.value.trim();
+      if (name) {
+        await populateSelect(select, name);
+        select.value = name;
+      } else {
+        await populateSelect(select, 'General');
+      }
+      newInput.classList.add('hidden');
+      select.classList.remove('hidden');
+    });
+    select.addEventListener('focus', () => {
+      if (select.value !== '__new__') select.dataset.prev = select.value;
+    });
+  }
+
+  await populateSelect(savedCollection, 'General');
+  await populateSelect(productCollection, 'General');
+  wireNewCollection(savedCollection, savedCollectionNew);
+  wireNewCollection(productCollection, productCollectionNew);
 
   // Get active tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -157,13 +213,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // ---- Collection: auto-save on change ----
+  // ---- Collection: auto-save on change (skip __new__ sentinel) ----
   savedCollection.addEventListener('change', async () => {
-    if (currentItem) {
-      const updated = { ...currentItem, collection: savedCollection.value.trim() };
+    if (currentItem && savedCollection.value !== '__new__') {
+      const updated = { ...currentItem, collection: savedCollection.value };
       await chrome.storage.local.set({ [updated.id]: updated });
       currentItem = updated;
-      await loadCollections();
     }
   });
 
@@ -197,8 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       thumb.style.display = 'none';
     }
 
-    savedCollection.value = item.collection || 'General';
-    await loadCollections();
+    await populateSelect(savedCollection, item.collection || 'General');
     notifyToggle.checked = !!item.notifyOnPriceDrop;
     updateWatchingFrom(item);
 
@@ -207,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function showProductState(data) {
+  async function showProductState(data) {
     productData = data;
     showState('stateProduct');
     document.getElementById('app').classList.remove('show-manual');
@@ -225,7 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       thumb.style.display = 'none';
     }
 
-    productCollection.value = productCollection.value || 'General';
+    await populateSelect(productCollection, 'General');
   }
 
   function showEmptyState() {

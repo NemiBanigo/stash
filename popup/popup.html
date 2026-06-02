@@ -38,8 +38,8 @@
       </div>
       <div class="field-group">
         <label class="field-label">Collection</label>
-        <input type="text" class="select-input" id="savedCollection" placeholder="Add to collection…" autocomplete="off" list="collections-list" />
-        <datalist id="collections-list"></datalist>
+        <select class="select-input" id="savedCollection"></select>
+        <input type="text" class="select-input new-collection-input hidden" id="savedCollectionNew" placeholder="Collection name…" autocomplete="off" />
       </div>
       <div class="toggle-row">
         <div class="toggle-info">
@@ -91,7 +91,8 @@
       </div>
       <div class="field-group">
         <label class="field-label">Collection</label>
-        <input type="text" class="select-input" id="productCollection" placeholder="Add to collection…" autocomplete="off" list="collections-list" />
+        <select class="select-input" id="productCollection"></select>
+        <input type="text" class="select-input new-collection-input hidden" id="productCollectionNew" placeholder="Collection name…" autocomplete="off" />
       </div>
       <div class="toggle-row">
         <div class="toggle-info">
