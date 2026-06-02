@@ -54,11 +54,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
+    let confirming = false;
     async function confirmNewCollection() {
+      if (confirming) return;
+      confirming = true;
       const name = newInput.value.trim() || 'General';
       await populateSelect(select, name);
       newInput.classList.add('hidden');
       select.classList.remove('hidden');
+      // Trigger save if this is the savedCollection
+      if (select === savedCollection && currentItem) {
+        const updated = { ...currentItem, collection: name };
+        await chrome.storage.local.set({ [updated.id]: updated });
+        currentItem = updated;
+      }
+      confirming = false;
     }
 
     newInput.addEventListener('keydown', (e) => {
