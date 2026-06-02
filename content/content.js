@@ -115,9 +115,7 @@ function detectProduct() {
   const isStorePage = !isProductPage && !!(
     isListingPath ||
     isGrid ||
-    getMeta('og:site_name') ||
-    document.querySelector('[itemtype*="Store"], [itemtype*="Organization"]') ||
-    /\/(shop|store|collection|category|search|listing|products)\b/i.test(path) ||
+    /\/(shop|store|collections?|category|search|listing|products)\b/i.test(path) ||
     document.querySelector('[class*="product-card"], [class*="ProductCard"], [class*="product-item"], [class*="ProductItem"]')
   );
 
