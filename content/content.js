@@ -95,7 +95,12 @@ function detectProduct() {
   // Multi-segment /products/category/sub paths (not a single product slug)
   const isCollectionPath = /\/products\/[^/?#]+\/[^/?#]/i.test(path);
 
-  const isListingPage = isHomepage || hasListingPath || hasListingQuery || hasMultiplePrices || isCollectionPath;
+  // Multi-segment paths that don't look like a product are likely category pages
+  // e.g. /nl/en/women/shoes, /en/us/clothing/tops
+  const pathSegments = path.replace(/^\/|\/$/g, '').split('/').filter(Boolean);
+  const isDeepCategoryPath = pathSegments.length >= 2 && !hasProductUrl;
+
+  const isListingPage = isHomepage || hasListingPath || hasListingQuery || hasMultiplePrices || isCollectionPath || isDeepCategoryPath;
 
   // ── RULE 1: Single product signals ───────────────────────────────────────
   const hasStrongMeta =
