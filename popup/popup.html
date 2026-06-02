@@ -8,7 +8,110 @@
 </head>
 <body>
   <div id="app">
-    <h1>Stash</h1>
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">S</div>
+        <span class="brand">Stash</span>
+      </div>
+      <button class="btn-icon close-btn" id="closeBtn" title="Close">✕</button>
+    </div>
+
+    <!-- State: Loading -->
+    <div id="stateLoading" class="state">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <!-- State: Already saved -->
+    <div id="stateSaved" class="state hidden">
+      <div class="saved-status">
+        <span class="heart-icon">♥</span>
+        <span class="saved-label">Already saved</span>
+      </div>
+      <div class="item-card" id="savedCard">
+        <img class="item-thumb" id="savedThumb" src="" alt="" />
+        <div class="item-info">
+          <div class="item-title" id="savedTitle"></div>
+          <div class="item-domain" id="savedDomain"></div>
+          <div class="item-price" id="savedPrice"></div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Collection</label>
+        <select class="select-input" id="savedCollection">
+          <option value="">No collection</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Notify on price drop</div>
+          <div class="toggle-sub" id="watchingFrom"></div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notifyToggle" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-primary" id="doneBtn">Done</button>
+        <button class="btn btn-secondary" id="addNoteBtn">Add note</button>
+      </div>
+      <div class="note-area hidden" id="noteArea">
+        <textarea class="note-input" id="noteInput" placeholder="Add a note..."></textarea>
+        <button class="btn btn-primary btn-sm" id="saveNoteBtn">Save note</button>
+      </div>
+    </div>
+
+    <!-- State: No product found -->
+    <div id="stateEmpty" class="state hidden">
+      <div class="empty-illustration">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="20" width="60" height="48" rx="6" fill="#f0f0f0" stroke="#ddd" stroke-width="2"/>
+          <rect x="22" y="10" width="36" height="16" rx="4" fill="#e0e0e0" stroke="#ddd" stroke-width="2"/>
+          <circle cx="32" cy="44" r="6" fill="#ccc"/>
+          <circle cx="48" cy="44" r="6" fill="#ccc"/>
+          <path d="M30 58 Q40 52 50 58" stroke="#bbb" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="empty-heading">No products found</div>
+      <div class="empty-sub">Visit a product page to save an item.</div>
+    </div>
+
+    <!-- State: Product found, not saved -->
+    <div id="stateProduct" class="state hidden">
+      <div class="item-card" id="productCard">
+        <img class="item-thumb" id="productThumb" src="" alt="" />
+        <div class="item-info">
+          <div class="item-title" id="productTitle"></div>
+          <div class="item-domain" id="productDomain"></div>
+          <div class="item-price" id="productPrice"></div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Collection</label>
+        <select class="select-input" id="productCollection">
+          <option value="">No collection</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <div class="toggle-label">Notify on price drop</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="productNotifyToggle" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-primary btn-full" id="saveBtn">Save</button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <a class="view-stash-link" id="viewStashLink" href="#">View stash →</a>
+      <button class="btn btn-outline" id="saveManuallyBtn">Save manually</button>
+    </div>
   </div>
   <script src="popup.js"></script>
 </body>

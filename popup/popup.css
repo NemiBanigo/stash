@@ -6,17 +6,391 @@
 
 body {
   width: 360px;
-  min-height: 480px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #fff;
   color: #111;
+  min-height: 200px;
 }
 
 #app {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo {
+  width: 28px;
+  height: 28px;
+  background: #111;
+  color: #fff;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.brand {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  font-size: 14px;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn-icon:hover {
+  color: #111;
+  background: #f5f5f5;
+}
+
+/* States */
+.state {
   padding: 16px;
 }
 
-h1 {
-  font-size: 20px;
+.hidden {
+  display: none !important;
+}
+
+/* Loading */
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #eee;
+  border-top-color: #111;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Already saved status */
+.saved-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.heart-icon {
+  color: #e91e63;
+  font-size: 16px;
+}
+
+.saved-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Item card */
+.item-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fafafa;
+  border: 1px solid #ebebeb;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.item-thumb {
+  width: 54px;
+  height: 54px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #eee;
+  flex-shrink: 0;
+}
+
+.item-thumb[src=""] {
+  display: none;
+}
+
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-domain {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.item-price {
+  font-size: 13px;
   font-weight: 600;
+  color: #111;
+  margin-top: 4px;
+}
+
+/* Fields */
+.field-group {
+  margin-bottom: 14px;
+}
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.select-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #111;
+  background: #fff;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.select-input:focus {
+  outline: none;
+  border-color: #111;
+}
+
+/* Toggle */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111;
+}
+
+.toggle-sub {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ddd;
+  border-radius: 11px;
+  transition: background 0.2s;
+}
+
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 2px;
+  top: 2px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle-switch input:checked + .toggle-track {
+  background: #4caf50;
+}
+
+.toggle-switch input:checked + .toggle-track::after {
+  transform: translateX(18px);
+}
+
+/* Action buttons */
+.action-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.btn {
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn-primary {
+  background: #111;
+  color: #fff;
+  flex: 1;
+}
+
+.btn-secondary {
+  background: #f5f5f5;
+  color: #111;
+  flex: 1;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-sm {
+  padding: 7px 14px;
+  font-size: 12px;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #111;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.btn-outline:hover {
+  border-color: #111;
+  background: #f9f9f9;
+}
+
+/* Note area */
+.note-area {
+  margin-top: 10px;
+}
+
+.note-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 72px;
+  margin-bottom: 8px;
+}
+
+.note-input:focus {
+  outline: none;
+  border-color: #111;
+}
+
+/* Empty state */
+.empty-illustration {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 16px;
+}
+
+.empty-heading {
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.empty-sub {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* Footer */
+.footer {
+  padding: 10px 16px 14px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.view-stash-link {
+  font-size: 13px;
+  color: #111;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.view-stash-link:hover {
+  text-decoration: underline;
+}
+
+/* Hide save manually btn when not in empty state */
+#saveManuallyBtn {
+  display: none;
+}
+
+.show-manual #saveManuallyBtn {
+  display: inline-flex;
 }
