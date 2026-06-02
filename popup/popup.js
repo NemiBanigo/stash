@@ -170,8 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ---- Helpers ----
 
   function urlToKey(url) {
-    // Use base64-safe hash of URL as key
-    return 'item_' + btoa(url).replace(/[^a-zA-Z0-9]/g, '').substring(0, 40);
+    return 'item_' + btoa(encodeURIComponent(url)).replace(/[^a-zA-Z0-9]/g, '');
   }
 
   function showState(id) {
