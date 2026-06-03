@@ -49,6 +49,13 @@ function extractImage(jsonLd) {
 
 function isProductPage() {
   const path = window.location.pathname;
+  const search = window.location.search;
+
+  // ── Explicit non-product pages ───────────────────────────────────────────
+  // Search results, category listings with filters
+  if (/^\/s(\?|$)/.test(path)) return false;           // Amazon search: /s?k=
+  if (/[?&](k|q|query|search|keyword)=/.test(search)) return false; // search queries
+  if (/[?&](page|pg)=\d/.test(search) && !/\/dp\/|\/products\//.test(path)) return false; // paginated listing
   // Get the last non-empty path segment
   const segments = path.replace(/\/+$/, '').split('/').filter(Boolean);
   const lastSegment = segments[segments.length - 1] || '';
