@@ -47,18 +47,6 @@ function extractImage(jsonLd) {
   return null;
 }
 
-function countVisiblePrices() {
-  const els = document.querySelectorAll(
-    '[itemprop="price"], [class*="price"]:not(script):not(style), [class*="Price"]:not(script):not(style), [data-price], [data-product-price]'
-  );
-  let count = 0;
-  for (const el of els) {
-    const r = el.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) count++;
-    if (count > 3) break; // short-circuit
-  }
-  return count;
-}
 
 function detectProduct() {
   const jsonLd = getJsonLd();
@@ -84,11 +72,8 @@ function detectProduct() {
   const finalPrice = extractPrice(jsonLd) || getMeta('og:price:amount') || getMeta('product:price:amount') || domPrice || null;
 
   // ── RULE 2: Not a product URL = listing/store page ────────────────────────
-  // Single product pages always have a unique identifier in the URL.
-  // Anything without a product URL pattern is a listing or non-commerce page.
-  const hasMultiplePrices = countVisiblePrices() > 3;
-
-  const isListingPage = !hasProductUrl || hasMultiplePrices;
+  // Product URL always wins — variant swatches with data-price shouldn't override it
+  const isListingPage = !hasProductUrl;
 
   // ── RULE 1: Single product signals ───────────────────────────────────────
   const hasStrongMeta =
