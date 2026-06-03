@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let confirming = false;
     async function confirmNewCollection() {
-      if (confirming) return;
+      if (confirming || newInput.classList.contains('hidden')) return;
       confirming = true;
       const name = newInput.value.trim() || 'General';
       await populateSelect(select, name);
