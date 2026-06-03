@@ -47,14 +47,54 @@ function extractImage(jsonLd) {
   return null;
 }
 
+function isProductPage() {
+  const path = window.location.pathname;
+  // Get the last non-empty path segment
+  const segments = path.replace(/\/+$/, '').split('/').filter(Boolean);
+  const lastSegment = segments[segments.length - 1] || '';
+
+  // ── Tier 1: Structured data — most reliable ──────────────────────────────
+  if (getMeta('og:type') === 'product') return true;
+  if (getMeta('og:price:amount') || getMeta('product:price:amount')) return true;
+  if (document.querySelector('[itemtype*="schema.org/Product"]')) return true;
+  if (getJsonLd()) return true;
+
+  // ── Tier 2: URL patterns for known platforms ─────────────────────────────
+  // Shopify: /products/product-slug
+  if (/^\/products\/[^/]+\/?$/.test(path)) return true;
+  // Cettire, generic: /p/slug
+  if (/\/(product|item|p)\/[^/]/.test(path)) return true;
+  // Amazon: /dp/ASIN or /gp/product/ASIN
+  if (/\/dp\/[A-Z0-9]|\/gp\/product\//.test(path)) return true;
+  // Farfetch: item-name-12345.aspx
+  if (/\/[^/]+-\d{5,}\.(html?|aspx)$/.test(path)) return true;
+  // PDP paths
+  if (/\/(pdp|product-detail|product_detail)\//.test(path)) return true;
+  // ASOS: /prd/12345
+  if (/\/prd\/\d+/.test(path)) return true;
+  // Net-a-Porter: /shop/product/
+  if (/\/shop\/product\//.test(path)) return true;
+
+  // ── Tier 3: Last URL segment ends with a numeric ID ──────────────────────
+  // Covers Mytheresa (-p00975477), most custom stores, any site that appends
+  // a product ID to the slug. 5+ digits avoids false matches on years (2024).
+  if (/\d{5,}$/.test(lastSegment)) return true;
+  // Also catches patterns like: slug-p00123, slug_123456, slug.12345
+  if (/[-_.]p?\d{5,}$/.test(lastSegment)) return true;
+
+  // ── Tier 4: Single add-to-cart button ────────────────────────────────────
+  const addToCartBtns = document.querySelectorAll(
+    'button[name="add"], [class*="add-to-cart"], [class*="AddToCart"], [class*="add_to_cart"], [id*="add-to-cart"], [id*="AddToCart"], [data-action*="add-to-cart"]'
+  );
+  if (addToCartBtns.length === 1) return true;
+
+  return false;
+}
 
 function detectProduct() {
   const jsonLd = getJsonLd();
-  const path = window.location.pathname;
-  const search = window.location.search;
 
-  // --- Extract metadata ---
-  let title = jsonLd?.name || getMeta('og:title') || document.querySelector('h1')?.textContent?.trim() || document.title;
+  const title = jsonLd?.name || getMeta('og:title') || document.querySelector('h1')?.textContent?.trim() || document.title;
   const image = extractImage(jsonLd);
 
   const priceSelectors = [
@@ -69,38 +109,20 @@ function detectProduct() {
       if (domPrice) break;
     }
   }
-  const finalPrice = extractPrice(jsonLd) || getMeta('og:price:amount') || getMeta('product:price:amount') || domPrice || null;
+  const price = extractPrice(jsonLd) || getMeta('og:price:amount') || getMeta('product:price:amount') || domPrice || null;
 
-  // ── RULE 2: Not a product URL = listing/store page ────────────────────────
-  // Product URL always wins — variant swatches with data-price shouldn't override it
-  const isListingPage = !hasProductUrl;
+  const onProductPage = isProductPage();
+  const domain = window.location.hostname;
 
-  // ── RULE 1: Single product signals ───────────────────────────────────────
-  const hasStrongMeta =
-    getMeta('og:type') === 'product' ||
-    !!document.querySelector('[itemtype*="schema.org/Product"]') ||
-    !!getMeta('og:price:amount') ||
-    !!getMeta('product:price:amount') ||
-    !!jsonLd;
-
-  const hasProductUrl =
-    /\/products\/[^/?#]+(\/)?$/i.test(path) ||   // Shopify
-    /\/(product|item|p)\/[^/?#]/i.test(path) ||   // /product/slug, /p/slug (Cettire)
-    /\/dp\/[A-Z0-9]/i.test(path) ||               // Amazon
-    /\/[^/]+-\d{5,}\.(html?|aspx)$/i.test(path) || // Farfetch
-    /\/(pdp|product-detail|product_detail)\//i.test(path);
-
-  const hasAddToCart = !!document.querySelector(
-    'button[name="add"], [class*="add-to-cart"], [class*="AddToCart"], [class*="add_to_cart"], [id*="add-to-cart"], [id*="AddToCart"], [data-action*="add-to-cart"]'
-  );
-
-  // Rule 2 overrides Rule 1
-  const isProductPage = !isListingPage && (hasStrongMeta || hasProductUrl || hasAddToCart);
-
-  // ── RULE 3: Store state = any non-product page on the web ────────────────
-  const isStorePage = !isProductPage && isListingPage;
-
-  return { title, price: finalPrice, image, isProductPage, isStorePage, url: window.location.href };
+  return {
+    title,
+    price,
+    image,
+    domain,
+    isProductPage: onProductPage,
+    isStorePage: !onProductPage,  // any non-product http page = store state
+    url: window.location.href
+  };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
