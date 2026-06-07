@@ -99,7 +99,8 @@ function detectProduct() {
   ).length;
   const isGrid = productCardCount > 2;
 
-  const isProductPage = !isListingPath && !isGrid && !!(
+  // A clear product URL slug always wins over the grid heuristic
+  const isProductPage = !isListingPath && !!(
     isProductUrl ||
     (!isGrid && getMeta('og:type') === 'product') ||
     document.querySelector('[itemtype*="Product"]') ||
