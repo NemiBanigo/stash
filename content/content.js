@@ -128,6 +128,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'GET_PRODUCT_DATA') {
     const data = detectProduct();
     sendResponse(data);
+    return false;
   }
-  return true;
 });
