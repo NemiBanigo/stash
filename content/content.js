@@ -35,14 +35,20 @@ function extractPrice(jsonLd) {
   return null;
 }
 
+function normalizeUrl(url) {
+  if (!url) return url;
+  if (url.startsWith('//')) return 'https:' + url;
+  return url;
+}
+
 function extractImage(jsonLd) {
   if (jsonLd && jsonLd.image) {
-    if (typeof jsonLd.image === 'string') return jsonLd.image;
-    if (Array.isArray(jsonLd.image)) return jsonLd.image[0];
-    if (jsonLd.image.url) return jsonLd.image.url;
+    if (typeof jsonLd.image === 'string') return normalizeUrl(jsonLd.image);
+    if (Array.isArray(jsonLd.image)) return normalizeUrl(jsonLd.image[0]);
+    if (jsonLd.image.url) return normalizeUrl(jsonLd.image.url);
   }
   const ogImage = getMeta('og:image');
-  if (ogImage) return ogImage;
+  if (ogImage) return normalizeUrl(ogImage);
   const img = document.querySelector('[itemprop="image"], .product-image img, #product-image img, .product__image img');
   if (img) return img.src || img.getAttribute('content') || null;
   return null;
