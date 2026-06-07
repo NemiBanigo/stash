@@ -166,7 +166,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ---- Helpers ----
 
   function urlToKey(url) {
-    // Use base64-safe hash of URL as key
+    // Strip tracking/recommendation query params, keep only path + variant params
+    try {
+      const u = new URL(url);
+      const keepParams = ['variant', 'v', 'color', 'size', 'sku'];
+      const cleaned = new URL(u.origin + u.pathname);
+      keepParams.forEach(p => { if (u.searchParams.has(p)) cleaned.searchParams.set(p, u.searchParams.get(p)); });
+      url = cleaned.toString();
+    } catch (e) {}
     return 'item_' + btoa(url).replace(/[^a-zA-Z0-9]/g, '').substring(0, 40);
   }
 
