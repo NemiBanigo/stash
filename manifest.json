@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Stash",
-  "version": "0.1.0",
-  "description": "Save web items for later",
+  "version": "1.0.0",
+  "description": "Save products and pages while shopping online. View your stash in a clean gallery.",
   "permissions": [
     "storage",
     "activeTab",
