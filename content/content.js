@@ -42,15 +42,22 @@ function normalizeUrl(url) {
 }
 
 function extractImage(jsonLd) {
+  // Prefer the visible main product image so variant switches are reflected
+  const visibleImg = document.querySelector(
+    '[itemprop="image"], .product__image img, .product-image img, #product-image img, ' +
+    '[data-product-featured-image], .featured-image img, ' +
+    'img[id*="product"], img[class*="product-featured"]'
+  );
+  if (visibleImg && visibleImg.src) return normalizeUrl(visibleImg.src);
+
+  const ogImage = getMeta('og:image');
+  if (ogImage) return normalizeUrl(ogImage);
+
   if (jsonLd && jsonLd.image) {
     if (typeof jsonLd.image === 'string') return normalizeUrl(jsonLd.image);
     if (Array.isArray(jsonLd.image)) return normalizeUrl(jsonLd.image[0]);
     if (jsonLd.image.url) return normalizeUrl(jsonLd.image.url);
   }
-  const ogImage = getMeta('og:image');
-  if (ogImage) return normalizeUrl(ogImage);
-  const img = document.querySelector('[itemprop="image"], .product-image img, #product-image img, .product__image img');
-  if (img) return img.src || img.getAttribute('content') || null;
   return null;
 }
 
