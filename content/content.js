@@ -42,8 +42,17 @@ function normalizeUrl(url) {
 }
 
 function extractImage(jsonLd) {
-  // Try to find the largest visible image on the page — works across most sites
-  // regardless of class names or framework
+  // og:image is the most reliable product image across all sites
+  const ogImage = getMeta('og:image');
+  if (ogImage) return normalizeUrl(ogImage);
+
+  if (jsonLd && jsonLd.image) {
+    if (typeof jsonLd.image === 'string') return normalizeUrl(jsonLd.image);
+    if (Array.isArray(jsonLd.image)) return normalizeUrl(jsonLd.image[0]);
+    if (jsonLd.image.url) return normalizeUrl(jsonLd.image.url);
+  }
+
+  // Fall back to largest visible image
   const imgs = Array.from(document.querySelectorAll('img'));
   const candidate = imgs
     .filter(img => {
@@ -57,17 +66,7 @@ function extractImage(jsonLd) {
       return (bRect.width * bRect.height) - (aRect.width * aRect.height);
     })[0];
 
-  if (candidate) return normalizeUrl(candidate.src);
-
-  const ogImage = getMeta('og:image');
-  if (ogImage) return normalizeUrl(ogImage);
-
-  if (jsonLd && jsonLd.image) {
-    if (typeof jsonLd.image === 'string') return normalizeUrl(jsonLd.image);
-    if (Array.isArray(jsonLd.image)) return normalizeUrl(jsonLd.image[0]);
-    if (jsonLd.image.url) return normalizeUrl(jsonLd.image.url);
-  }
-  return null;
+  return candidate ? normalizeUrl(candidate.src) : null;
 }
 
 function detectProduct() {
