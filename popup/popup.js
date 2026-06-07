@@ -44,22 +44,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     showProductState(item);
   });
 
-  // Request product data from content script
+  // Request product data from content script, with retry for slow-loading pages
   let productData = null;
-  try {
-    productData = await chrome.tabs.sendMessage(tab.id, { type: 'GET_PRODUCT_DATA' });
-  } catch (e) {
-    // Content script not injected yet — inject it programmatically and retry
+  async function fetchProductData() {
     try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/content.js']
-      });
-      productData = await chrome.tabs.sendMessage(tab.id, { type: 'GET_PRODUCT_DATA' });
-    } catch (e2) {
-      productData = { isProductPage: false, isStorePage: false };
+      return await chrome.tabs.sendMessage(tab.id, { type: 'GET_PRODUCT_DATA' });
+    } catch (e) {
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content/content.js']
+        });
+        return await chrome.tabs.sendMessage(tab.id, { type: 'GET_PRODUCT_DATA' });
+      } catch (e2) {
+        return null;
+      }
     }
   }
+
+  productData = await fetchProductData();
+  // If page hadn't fully loaded yet, wait and retry once
+  if (!productData || (!productData.isProductPage && !productData.isStorePage)) {
+    await new Promise(r => setTimeout(r, 800));
+    const retry = await fetchProductData();
+    if (retry && (retry.isProductPage || retry.isStorePage)) productData = retry;
+  }
+  if (!productData) productData = { isProductPage: false, isStorePage: false };
 
   // Check if URL is already saved
   const urlKey = urlToKey(tab.url);
