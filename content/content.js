@@ -42,13 +42,22 @@ function normalizeUrl(url) {
 }
 
 function extractImage(jsonLd) {
-  // Prefer the visible main product image so variant switches are reflected
-  const visibleImg = document.querySelector(
-    '[itemprop="image"], .product__image img, .product-image img, #product-image img, ' +
-    '[data-product-featured-image], .featured-image img, ' +
-    'img[id*="product"], img[class*="product-featured"]'
-  );
-  if (visibleImg && visibleImg.src) return normalizeUrl(visibleImg.src);
+  // Try to find the largest visible image on the page — works across most sites
+  // regardless of class names or framework
+  const imgs = Array.from(document.querySelectorAll('img'));
+  const candidate = imgs
+    .filter(img => {
+      if (!img.src || img.src.startsWith('data:')) return false;
+      const rect = img.getBoundingClientRect();
+      return rect.width >= 200 && rect.height >= 200;
+    })
+    .sort((a, b) => {
+      const aRect = a.getBoundingClientRect();
+      const bRect = b.getBoundingClientRect();
+      return (bRect.width * bRect.height) - (aRect.width * aRect.height);
+    })[0];
+
+  if (candidate) return normalizeUrl(candidate.src);
 
   const ogImage = getMeta('og:image');
   if (ogImage) return normalizeUrl(ogImage);
